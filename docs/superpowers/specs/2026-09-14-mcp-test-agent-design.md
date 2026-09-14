@@ -131,8 +131,17 @@ C:\NashTech\mcp-test-agent\
 
 - The full end-to-end flow (ticket + spec → strategy → UI execution with
   self-heal → API execution → reporting) completes deterministically in the
-  integration test, with zero external network calls beyond spawning local
-  processes (Playwright MCP via `npx`, the three built servers, the demo app).
+  integration test. The integration test exercises the three built servers'
+  tool logic in-process (calling the real `@mcp.tool()`-decorated functions
+  directly) and drives the browser with Playwright's own Python API as a
+  deterministic stand-in for what a live agent does through Playwright MCP —
+  this is what lets the self-heal path be tested without needing a live LLM
+  in the loop. Each built server's unit tests independently prove its tools
+  are correct; the live demo is what actually runs all four servers as real
+  MCP processes (including Playwright MCP via `npx`) with a real agent
+  orchestrating them. Zero external network calls occur in either case beyond
+  the demo app itself and, for the live demo only, spawning the four local
+  MCP processes.
 - All four MCP servers are independently startable/testable — no server
   depends on another's internals, only on the shared demo app and mock data
   stores.
