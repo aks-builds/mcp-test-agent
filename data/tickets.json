@@ -1,0 +1,7 @@
+{
+  "NASH-101": {
+    "id": "NASH-101",
+    "title": "Add Task creation flow should work end-to-end",
+    "description": "As a user, I want to add a new task so I can track my work.\n\nGiven the task tracker is loaded\nWhen I enter a task title and click \"Add Task\"\nThen the task appears in the task list\n\nAcceptance criteria:\n- POST /tasks creates a task and returns 201\n- The new task appears in GET /tasks\n- The UI \"Add Task\" button adds the task to the visible list\n\nAutomation notes: earlier smoke-test automation targeted the button by id #add-task-btn. Confirm this still locates the button before relying on it."
+  }
+}
