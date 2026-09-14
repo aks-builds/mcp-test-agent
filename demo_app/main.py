@@ -47,3 +47,12 @@ def create_task(payload: TaskCreate):
     _tasks.append(task)
     _next_id += 1
     return task
+
+
+@app.post("/tasks/{task_id}/complete", response_model=Task)
+def complete_task(task_id: int):
+    for task in _tasks:
+        if task["id"] == task_id:
+            task["completed"] = True
+            return task
+    raise HTTPException(status_code=404, detail="Task not found")
