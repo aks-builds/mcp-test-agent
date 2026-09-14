@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head><title>Task Tracker</title></head>
+<body>
+  <h1>Task Tracker</h1>
+  <input id="task-title" type="text" placeholder="New task title" />
+  <button id="save-task-btn">Add Task</button>
+  <ul id="task-list"></ul>
+  <script>
+    async function loadTasks() {
+      const res = await fetch('/tasks');
+      const tasks = await res.json();
+      const list = document.getElementById('task-list');
+      list.innerHTML = '';
+      for (const t of tasks) {
+        const li = document.createElement('li');
+        li.textContent = t.title + (t.completed ? ' (done)' : '');
+        list.appendChild(li);
+      }
+    }
+    document.getElementById('save-task-btn').addEventListener('click', async () => {
+      const input = document.getElementById('task-title');
+      if (!input.value) return;
+      await fetch('/tasks', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({title: input.value})
+      });
+      input.value = '';
+      loadTasks();
+    });
+    loadTasks();
+  </script>
+</body>
+</html>
