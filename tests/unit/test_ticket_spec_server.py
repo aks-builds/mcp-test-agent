@@ -23,3 +23,13 @@ def test_get_openapi_spec_fetches_from_demo_app():
     )
     result = get_openapi_spec()
     assert result["openapi"] == "3.1.0"
+
+
+@respx.mock
+def test_get_openapi_spec_returns_error_on_transport_failure():
+    respx.get("http://127.0.0.1:8000/openapi.json").mock(
+        side_effect=httpx.ConnectError("boom")
+    )
+    result = get_openapi_spec()
+    assert "error" in result
+    assert "boom" in result["error"]

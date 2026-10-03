@@ -27,9 +27,14 @@ def get_ticket(ticket_id: str) -> dict:
 
 @mcp.tool()
 def get_openapi_spec() -> dict:
-    """Fetch the target demo app's live OpenAPI spec."""
-    resp = httpx.get(f"{DEMO_APP_URL}/openapi.json", timeout=5.0)
-    resp.raise_for_status()
+    """Fetch the target demo app's live OpenAPI spec. Returns a structured
+    error dict instead of raising if the demo app is unreachable or
+    returns an error status."""
+    try:
+        resp = httpx.get(f"{DEMO_APP_URL}/openapi.json", timeout=5.0)
+        resp.raise_for_status()
+    except httpx.HTTPError as exc:
+        return {"error": f"demo app unreachable or returned an error: {exc}"}
     return resp.json()
 
 

@@ -23,3 +23,18 @@ def test_run_api_test_fails_on_mismatched_status():
     result = run_api_test("POST", "/tasks/999/complete", expected_status=200)
     assert result["passed"] is False
     assert result["actual_status"] == 404
+
+
+@respx.mock
+def test_run_api_test_returns_structured_error_on_transport_failure():
+    respx.get("http://127.0.0.1:8000/tasks").mock(
+        side_effect=httpx.ConnectError("boom")
+    )
+    result = run_api_test("GET", "/tasks", expected_status=200)
+    assert result["passed"] is False
+    assert result["method"] == "GET"
+    assert result["path"] == "/tasks"
+    assert result["expected_status"] == 200
+    assert result["actual_status"] is None
+    assert result["response_body"] is None
+    assert "boom" in result["error"]

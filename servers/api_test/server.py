@@ -18,9 +18,22 @@ def run_api_test(
 ) -> dict:
     """Execute an HTTP call against the demo app and assert the response
     status matches expected_status. Returns a structured pass/fail result,
-    never raises for a failed assertion, only for a transport-level error."""
+    never raises for a failed assertion or a transport-level error; a
+    transport error (e.g. the demo app is unreachable) comes back as a
+    failed result with an added error key."""
     url = f"{DEMO_APP_URL}{path}"
-    response = httpx.request(method.upper(), url, json=body, timeout=5.0)
+    try:
+        response = httpx.request(method.upper(), url, json=body, timeout=5.0)
+    except httpx.HTTPError as exc:
+        return {
+            "passed": False,
+            "method": method.upper(),
+            "path": path,
+            "expected_status": expected_status,
+            "actual_status": None,
+            "response_body": None,
+            "error": str(exc),
+        }
     passed = response.status_code == expected_status
     return {
         "passed": passed,
