@@ -26,15 +26,17 @@ The target app must be running first: `uvicorn demo_app.main:app --port 8000`.
 4. Execute the UI flow using Playwright MCP against `http://127.0.0.1:8000/`.
    The ticket may reference a locator used by earlier automation (e.g. a
    button id), try that first.
-   - If a `click`/`fill` action fails because the target locator is not
-     found:
-     a. Call Playwright MCP's `snapshot` tool to get the current
-        accessibility tree.
-     b. Find the element with the same role and accessible name that the
-        ticket implied (e.g. a button named "Add Task").
-     c. Retry the action using that element instead.
-     d. State explicitly what locator you replaced and why, citing the
-        snapshot, never silently substitute a locator without saying so.
+
+   **If a locator fails:** when a `click`/`fill` action fails because the
+   target locator is not found:
+
+   a. Call Playwright MCP's `snapshot` tool to get the current
+      accessibility tree.
+   b. Find the element with the same role and accessible name that the
+      ticket implied (e.g. a button named "Add Task").
+   c. Retry the action using that element instead.
+   d. State explicitly what locator you replaced and why, citing the
+      snapshot, never silently substitute a locator without saying so.
 5. Execute the API-level checks with `api-test.run_api_test(method, path,
    body, expected_status)` for each endpoint identified in step 3.
 6. Summarize the run: what passed, what failed, what was self-healed and
