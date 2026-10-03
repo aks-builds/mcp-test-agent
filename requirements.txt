@@ -4,3 +4,4 @@ httpx
 pytest
 mcp<2
 respx
+playwright
