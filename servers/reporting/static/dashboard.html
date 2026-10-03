@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head><title>Mock Jira + Slack Dashboard</title></head>
+<body>
+  <h1>Live Reporting Feed</h1>
+  <div style="display:flex; gap:2rem;">
+    <section>
+      <h2>Jira</h2>
+      <pre id="jira"></pre>
+    </section>
+    <section>
+      <h2>Slack</h2>
+      <pre id="slack"></pre>
+    </section>
+  </div>
+  <script>
+    async function refresh() {
+      const jira = await (await fetch('/api/jira')).json();
+      const slack = await (await fetch('/api/slack')).json();
+      document.getElementById('jira').textContent = JSON.stringify(jira, null, 2);
+      document.getElementById('slack').textContent = JSON.stringify(slack, null, 2);
+    }
+    refresh();
+    setInterval(refresh, 1500);
+  </script>
+</body>
+</html>
