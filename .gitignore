@@ -1,1 +1,6 @@
 .worktrees/
+data/jira_comments.json
+data/slack_messages.json
+__pycache__/
+*.pyc
+.pytest_cache/
