@@ -1,24 +1,51 @@
 <!DOCTYPE html>
 <html>
-<head><title>Mock Jira + Slack Dashboard</title></head>
+<head>
+  <title>Mock Jira + Slack Dashboard</title>
+  <style>
+    body { font-family: Segoe UI, Arial, sans-serif; margin: 1.5rem; background: #f6f6f8; }
+    .cols { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    section { flex: 1; min-width: 320px; }
+    .item { background: #fff; border: 1px solid #ddd; border-left: 4px solid #6b2d8b;
+            border-radius: 6px; padding: .75rem 1rem; margin-bottom: .75rem; }
+    .slack .item { border-left-color: #0891b2; }
+    .key { font-weight: 600; margin-bottom: .35rem; }
+    pre { white-space: pre-wrap; margin: 0; font-family: Consolas, monospace; font-size: .95rem; }
+    .empty { color: #888; font-style: italic; }
+  </style>
+</head>
 <body>
   <h1>Live Reporting Feed</h1>
-  <div style="display:flex; gap:2rem;">
-    <section>
-      <h2>Jira</h2>
-      <pre id="jira"></pre>
-    </section>
-    <section>
-      <h2>Slack</h2>
-      <pre id="slack"></pre>
-    </section>
+  <div class="cols">
+    <section><h2>Jira</h2><div id="jira"></div></section>
+    <section class="slack"><h2>Slack</h2><div id="slack"></div></section>
   </div>
   <script>
+    function render(id, store, field) {
+      const box = document.getElementById(id);
+      box.innerHTML = '';
+      const keys = Object.keys(store);
+      if (!keys.length) {
+        box.innerHTML = '<p class="empty">Nothing posted yet</p>';
+        return;
+      }
+      for (const key of keys) {
+        for (const entry of store[key]) {
+          const item = document.createElement('div');
+          item.className = 'item';
+          const head = document.createElement('div');
+          head.className = 'key';
+          head.textContent = key;
+          const body = document.createElement('pre');
+          body.textContent = entry[field];
+          item.append(head, body);
+          box.appendChild(item);
+        }
+      }
+    }
     async function refresh() {
-      const jira = await (await fetch('/api/jira')).json();
-      const slack = await (await fetch('/api/slack')).json();
-      document.getElementById('jira').textContent = JSON.stringify(jira, null, 2);
-      document.getElementById('slack').textContent = JSON.stringify(slack, null, 2);
+      render('jira', await (await fetch('/api/jira')).json(), 'comment');
+      render('slack', await (await fetch('/api/slack')).json(), 'text');
     }
     refresh();
     setInterval(refresh, 1500);
