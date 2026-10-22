@@ -1,11 +1,11 @@
-"""Draws docs/demo-flow.svg. Run: python docs/make_demo_flow.py
+"""Draws docs/flow.svg. Run: python docs/make_flow.py
 
 One agent, one server (test-mcp) with four parts inside, the app under
 test, the mock Jira/Slack dashboard, and the trace window.
 """
 from pathlib import Path
 
-OUT = Path(__file__).with_name("demo-flow.svg")
+OUT = Path(__file__).with_name("flow.svg")
 W, H = 2000, 1010
 
 INK, GREY, BLUE, ORANGE, PURPLE = "#1d2230", "#5f6673", "#2f5fbf", "#e8743b", "#6b5bd2"
@@ -112,7 +112,7 @@ box(60, 110, 350, 115, "TICKET", "NASH-101",
     ["data/tickets.json, Given / When / Then optional"])
 box(60, 330, 350, 190, "AGENT", "Test agent",
     ["Claude Code . Gemini CLI . Codex . OpenCode",
-     "or run_demo.py (scripted, one command)",
+     "or run.py (scripted, one command)",
      "sees one server, one tool list, one plan",
      "plan . act . observe . adapt"],
     fill=PANEL, edge=GREY, tag_colour=INK)

@@ -17,7 +17,7 @@ def test_get_ticket_unknown_id_returns_error():
 
 
 @respx.mock
-def test_get_openapi_spec_fetches_from_demo_app():
+def test_get_openapi_spec_fetches_from_task_tracker():
     respx.get("http://127.0.0.1:8000/openapi.json").mock(
         return_value=httpx.Response(200, json={"openapi": "3.1.0", "paths": {}})
     )

@@ -1,8 +1,8 @@
-"""One-command demo.
+"""One command to run the test agent.
 
-    python run_demo.py                  scripted run: same MCP calls, decisions in code
-    python run_demo.py --agent opencode live run: a real agent (claude, gemini, codex, opencode)
-    python run_demo.py --trace          live table of every MCP call, for a second window
+    python run.py                  scripted run: same MCP calls, decisions in code
+    python run.py --agent opencode live run: a real agent (claude, gemini, codex, opencode)
+    python run.py --trace          live table of every MCP call, for a second window
 
 Both runs start the Task Tracker app and the mock Jira/Slack dashboard,
 then talk to ONE MCP server, test-mcp, which has four parts inside:
@@ -99,7 +99,7 @@ def port_free(port: int) -> bool:
 def start_web(module: str, port: int) -> subprocess.Popen:
     if not port_free(port):
         sys.exit(f"Port {port} is already in use. Stop the old process (a leftover "
-                 f"uvicorn from a rehearsal?) and run again.")
+                 f"uvicorn from an earlier run?) and run again.")
     proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", module, "--port", str(port), "--log-level", "warning"],
         cwd=ROOT,
@@ -122,7 +122,7 @@ def reset_mock_feeds() -> None:
 
 def start_services(open_dashboard: bool) -> list[subprocess.Popen]:
     reset_mock_feeds()
-    procs = [start_web("demo_app.main:app", APP_PORT),
+    procs = [start_web("task_tracker.main:app", APP_PORT),
              start_web("servers.reporting.dashboard:app", DASHBOARD_PORT)]
     print(f"  Task Tracker app   {APP_URL}")
     print(f"  Jira/Slack mock    {DASHBOARD_URL}  (cleared)")
@@ -204,17 +204,17 @@ def tail_trace() -> None:
 
 def open_trace_window() -> None:
     if os.name == "nt":
-        subprocess.Popen(["cmd", "/c", "start", "MCP trace", sys.executable, str(ROOT / "run_demo.py"), "--trace"],
+        subprocess.Popen(["cmd", "/c", "start", "MCP trace", sys.executable, str(ROOT / "run.py"), "--trace"],
                          cwd=ROOT)
         print("  Trace window opened (every MCP call, live)")
     else:
-        print(f"  In another terminal run: python run_demo.py --trace")
+        print(f"  In another terminal run: python run.py --trace")
 
 
 # ---------------------------------------------------------------- MCP client
 
 def server_transport(headless: bool) -> StdioTransport:
-    env = {**os.environ, "DEMO_APP_URL": APP_URL, "PYTHONPATH": str(ROOT), "FASTMCP_LOG_LEVEL": "WARNING"}
+    env = {**os.environ, "APP_URL": APP_URL, "PYTHONPATH": str(ROOT), "FASTMCP_LOG_LEVEL": "WARNING"}
     if headless:
         env["PLAYWRIGHT_HEADLESS"] = "1"
     return StdioTransport(sys.executable, ["-m", "servers.test_mcp.server"], env=env, cwd=str(ROOT))
@@ -396,7 +396,7 @@ def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     if os.name == "nt":
         os.system("")  # turn on ANSI colours in the Windows console
-    parser = argparse.ArgumentParser(description="Run the MCP test agent demo end to end.")
+    parser = argparse.ArgumentParser(description="Run the MCP test agent end to end.")
     parser.add_argument("--agent", choices=sorted(AGENTS), help="run a real agent instead of the scripted steps")
     parser.add_argument("--trace", action="store_true", help="only show the live MCP call table (second window)")
     parser.add_argument("--headless", action="store_true", help="do not show the browser window")
@@ -413,7 +413,7 @@ def main() -> None:
         return
 
     mode = f"live agent: {opts.agent}" if opts.agent else "scripted"
-    print(_c("1", f"MCP Test Agent demo ({mode}): one ticket ({TICKET_ID}) in, tested and reported result out"))
+    print(_c("1", f"MCP Test Agent ({mode}): one ticket ({TICKET_ID}) in, tested and reported result out"))
     procs = start_services(open_dashboard=not opts.no_dashboard)
     try:
         if opts.agent:

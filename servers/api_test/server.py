@@ -4,7 +4,7 @@ from typing import Any
 import httpx
 from fastmcp import FastMCP
 
-DEMO_APP_URL = os.environ.get("DEMO_APP_URL", "http://127.0.0.1:8000")
+APP_URL = os.environ.get("APP_URL", "http://127.0.0.1:8000")
 
 mcp = FastMCP("api-test")
 
@@ -16,12 +16,12 @@ def run_api_test(
     body: dict | None = None,
     expected_status: int = 200,
 ) -> dict:
-    """Execute an HTTP call against the demo app and assert the response
+    """Execute an HTTP call against the app under test and assert the response
     status matches expected_status. Returns a structured pass/fail result,
     never raises for a failed assertion or a transport-level error; a
-    transport error (e.g. the demo app is unreachable) comes back as a
+    transport error (e.g. the app is unreachable) comes back as a
     failed result with an added error key."""
-    url = f"{DEMO_APP_URL}{path}"
+    url = f"{APP_URL}{path}"
     try:
         response = httpx.request(method.upper(), url, json=body, timeout=5.0)
     except httpx.HTTPError as exc:

@@ -7,19 +7,19 @@ import pytest
 import uvicorn
 from playwright.sync_api import sync_playwright
 
-from demo_app.main import app as demo_app, reset_tasks
+from task_tracker.main import app as task_tracker, reset_tasks
 import servers.ticket_spec.server as ticket_spec_server
 import servers.api_test.server as api_test_server
 from servers.reporting import server as reporting_server
 
-DEMO_APP_PORT = 8000
-DEMO_APP_URL = f"http://127.0.0.1:{DEMO_APP_PORT}"
+APP_PORT = 8000
+APP_URL = f"http://127.0.0.1:{APP_PORT}"
 
 
 @pytest.fixture(scope="module")
-def running_demo_app():
+def running_task_tracker():
     reset_tasks()
-    config = uvicorn.Config(demo_app, host="127.0.0.1", port=DEMO_APP_PORT, log_level="warning")
+    config = uvicorn.Config(task_tracker, host="127.0.0.1", port=APP_PORT, log_level="warning")
     server = uvicorn.Server(config)
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
@@ -27,13 +27,13 @@ def running_demo_app():
     started = False
     while time.time() < deadline:
         try:
-            httpx.get(f"{DEMO_APP_URL}/openapi.json", timeout=0.5)
+            httpx.get(f"{APP_URL}/openapi.json", timeout=0.5)
             started = True
             break
         except httpx.TransportError:
             time.sleep(0.1)
     if not started:
-        pytest.fail("demo app did not start in time")
+        pytest.fail("app did not start in time")
     yield
     server.should_exit = True
     thread.join(timeout=5)
@@ -48,9 +48,9 @@ def use_tmp_reporting_files(tmp_path, monkeypatch):
     return jira_file, slack_file
 
 
-def test_full_demo_path_end_to_end(running_demo_app, use_tmp_reporting_files, monkeypatch):
-    monkeypatch.setattr(ticket_spec_server, "DEMO_APP_URL", DEMO_APP_URL)
-    monkeypatch.setattr(api_test_server, "DEMO_APP_URL", DEMO_APP_URL)
+def test_full_path_end_to_end(running_task_tracker, use_tmp_reporting_files, monkeypatch):
+    monkeypatch.setattr(ticket_spec_server, "APP_URL", APP_URL)
+    monkeypatch.setattr(api_test_server, "APP_URL", APP_URL)
 
     # 1. Ticket/Spec MCP
     ticket = ticket_spec_server.get_ticket("NASH-101")
@@ -63,7 +63,7 @@ def test_full_demo_path_end_to_end(running_demo_app, use_tmp_reporting_files, mo
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page()
-        page.goto(DEMO_APP_URL)
+        page.goto(APP_URL)
         page.fill("#task-title", "Buy milk")
 
         assert page.locator("#add-task-btn").count() == 0  # the drift is real

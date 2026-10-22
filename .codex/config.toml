@@ -1,4 +1,4 @@
-# Codex CLI: the one MCP server this demo needs. Loaded only when the
+# Codex CLI: the one MCP server this project needs. Loaded only when the
 # project is trusted (see README).
 
 [mcp_servers.test-mcp]

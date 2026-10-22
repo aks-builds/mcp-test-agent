@@ -1,6 +1,6 @@
 """test-mcp: one MCP server with several parts inside.
 
-The agent (Claude Code, Gemini CLI, Codex CLI, OpenCode, or run_demo.py)
+The agent (Claude Code, Gemini CLI, Codex CLI, OpenCode, or run.py)
 connects to this one server. Each part is a small FastMCP of its own,
 mounted here under a prefix, so the agent sees tools like
 ticket_get_ticket, api_run_api_test, report_post_jira_comment and the
@@ -11,7 +11,7 @@ To add a part: write a module that exposes a FastMCP object called
 
 Every tool call passes through this server, so one middleware here
 writes a trace line for every call to data/mcp_trace.jsonl. That is the
-table the demo prints.
+table run.py prints.
 """
 import importlib
 import json
@@ -167,7 +167,7 @@ def build_server(parts=PARTS) -> FastMCP:
         """Step-by-step procedure for testing one ticket with this server."""
         return PROCEDURE.format(
             ticket_id=ticket_id,
-            app_url=os.environ.get("DEMO_APP_URL", "http://127.0.0.1:8000"),
+            app_url=os.environ.get("APP_URL", "http://127.0.0.1:8000"),
             slack_channel="#qa-alerts",
         )
 

@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from demo_app.main import app, reset_tasks
+from task_tracker.main import app, reset_tasks
 
 client = TestClient(app)
 

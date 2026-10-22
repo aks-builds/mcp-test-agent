@@ -1,12 +1,11 @@
 # MCP Test Agent
 
-Demo for the NashLearn session "Building Test Agents with MCP Servers"
-(23 Oct 2026). One Jira ticket goes in. The agent reads it, reads the live
-API spec, tests the UI in a real browser, heals a broken locator, runs the
-API checks, and reports back to Jira and Slack. Nobody presses a button in
-between.
+A test agent built on MCP. One Jira ticket goes in. The agent reads it,
+reads the live API spec, tests the UI in a real browser, heals a broken
+locator, runs the API checks, and reports back to Jira and Slack. Nobody
+presses a button in between.
 
-![Demo flow](docs/demo-flow.svg)
+![Flow](docs/flow.svg)
 
 ## One server, four parts
 
@@ -42,7 +41,7 @@ parts keep working.
 
 ```bash
 pip install -r requirements.txt
-python run_demo.py --agent opencode     # or claude, gemini, codex
+python run.py --agent opencode     # or claude, gemini, codex
 ```
 
 Needs Python 3.11+ and Node.js 18+ (for `npx @playwright/mcp`). The first
@@ -80,10 +79,10 @@ The planted drift: the ticket still names the button `#add-task-btn` from
 older automation, but the app now uses `save-task-btn`. Its label is still
 "Add Task", which is what the agent finds in the snapshot.
 
-### Scripted run (rehearsal and fallback)
+### Scripted run (dry run and fallback)
 
 ```bash
-python run_demo.py
+python run.py
 ```
 
 Same services, same MCP calls, but the decisions are written in code, so
@@ -116,18 +115,18 @@ First-run notes:
   `gemini mcp list` or `codex mcp list` here: `test-mcp` should show as
   connected (Gemini) or enabled (Codex).
 - OpenCode needs no trust step. Pick a capable model with `/models`
-  before the demo; the free default is not enough for the self-heal step.
+  first; the free default is not enough for the self-heal step.
 - Every tool asks before each MCP tool call unless you let it run on its
   own. In Claude Code pick "always allow" on the first prompt. Gemini has
   `gemini -y`, Codex has `codex --full-auto`. Decide beforehand whether
-  you want to approve each call by hand on stage or let it run.
-- If a port is already in use (a leftover uvicorn from a rehearsal), stop
+  you want to approve each call by hand or let it run.
+- If a port is already in use (a leftover uvicorn from an earlier run), stop
   that process first.
 
 ## Layout
 
 ```
-run_demo.py               one command: services + trace window + agent (or scripted run)
+run.py               one command: services + trace window + agent (or scripted run)
 servers/test_mcp/         the umbrella: PARTS list, instructions, test_ticket prompt, trace
 servers/ticket_spec/      part "ticket": get_ticket, get_openapi_spec
 servers/api_test/         part "api": run_api_test
@@ -135,7 +134,7 @@ servers/reporting/        part "report": post_jira_comment, post_slack_message +
 servers/browser/          part "browser": proxy to Microsoft's Playwright MCP
 data/tickets.json         the mock Jira ticket NASH-101
 data/mcp_trace.jsonl      one line per tool call (written by test-mcp, cleared each run)
-demo_app/                 Task Tracker app under test (FastAPI + one HTML page)
+task_tracker/                 Task Tracker app under test (FastAPI + one HTML page)
 .mcp.json, .gemini/settings.json, .codex/config.toml, opencode.json
                           the same one server, for each agent tool
 tests/                    unit tests and end-to-end tests
@@ -148,6 +147,6 @@ pytest tests/unit
 pytest tests/integration
 ```
 
-`tests/integration/test_run_demo.py` runs `run_demo.py --headless` end to
+`tests/integration/test_run.py` runs `run.py --headless` end to
 end through `test-mcp`, so it needs Node.js and network access the first
 time.

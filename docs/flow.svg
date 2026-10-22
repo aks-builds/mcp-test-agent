@@ -52,7 +52,7 @@
 <text x="89" y="364" font-family="Consolas, 'JetBrains Mono', 'Courier New', monospace" font-size="12" letter-spacing="1.2" fill="#1d2230">AGENT</text>
 <text x="80" y="402" font-family="'Segoe UI', Arial, sans-serif" font-size="23" font-weight="700" fill="#1d2230">Test agent</text>
 <text x="80" y="428" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#3a3f4b">Claude Code . Gemini CLI . Codex . OpenCode</text>
-<text x="80" y="449" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#3a3f4b">or run_demo.py (scripted, one command)</text>
+<text x="80" y="449" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#3a3f4b">or run.py (scripted, one command)</text>
 <text x="80" y="470" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#3a3f4b">sees one server, one tool list, one plan</text>
 <text x="80" y="491" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#3a3f4b">plan . act . observe . adapt</text>
 <rect x="60" y="700" width="350" height="215" rx="8" fill="#e9e5fb" stroke="#6b5bd2" stroke-width="2"/>

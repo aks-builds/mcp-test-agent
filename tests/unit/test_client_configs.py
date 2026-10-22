@@ -2,7 +2,7 @@
 
 Claude Code reads .mcp.json, Gemini CLI reads .gemini/settings.json,
 Codex CLI reads .codex/config.toml and OpenCode reads opencode.json.
-If one drifts, the live demo works in one tool and breaks in another.
+If one drifts, the agent works in one tool and breaks in another.
 """
 import json
 import tomllib
@@ -43,6 +43,6 @@ def test_all_clients_point_at_test_mcp_only():
 
 def test_no_instruction_files_in_the_repo():
     """The procedure lives in the server (instructions + prompt), not in
-    AGENTS.md style files. Viewers should see MCP alone doing the job."""
+    AGENTS.md style files. MCP alone does the job."""
     for name in ("AGENTS.md", "GEMINI.md", "CLAUDE.md", "AGENT_RUNBOOK.md"):
         assert not (ROOT / name).exists(), f"{name} should not exist"
