@@ -13,9 +13,12 @@ Every tool call passes through this server, so one middleware here
 writes a trace line for every call to data/mcp_trace.jsonl. That is the
 table run.py prints.
 """
+import atexit
 import importlib
 import json
 import os
+import socket
+import subprocess
 import sys
 import time
 from datetime import datetime, timezone
@@ -43,10 +46,10 @@ report back to Jira and Slack (report_*).
 
 Use only the tools of this server. Everything you need is in this text
 and in those tools. Do not search the disk for a procedure or a prompt,
-do not read the repository, do not run shell commands, do not start or
-stop any server, and do not delete or edit any file. The app under test
-is already running; if a tool says it is unreachable, report that and
-stop. When the report is posted, you are done.
+do not read the repository, do not run shell commands, and do not delete
+or edit any file. The app under test starts automatically; if a tool
+says it is unreachable, report that and stop. When the report is
+posted, you are done.
 
 Rules:
 - Never say a check passed unless you called the tool and saw it pass.
@@ -166,6 +169,40 @@ def _markdown_summary(text: str) -> str:
     return " ".join(text.split())
 
 
+_app_proc: subprocess.Popen | None = None
+_APP_PORT = int(os.environ.get("APP_PORT", "8000"))
+
+
+def _port_free(port: int) -> bool:
+    with socket.socket() as s:
+        return s.connect_ex(("127.0.0.1", port)) != 0
+
+
+def _ensure_app() -> None:
+    """Start the task tracker if nothing is listening on the app port."""
+    global _app_proc
+    if not _port_free(_APP_PORT):
+        return
+    _app_proc = subprocess.Popen(
+        [sys.executable, "-m", "uvicorn", "task_tracker.main:app",
+         "--port", str(_APP_PORT), "--log-level", "warning"],
+        cwd=str(ROOT),
+    )
+    deadline = time.time() + 10
+    while time.time() < deadline:
+        if not _port_free(_APP_PORT):
+            return
+        time.sleep(0.2)
+
+
+@atexit.register
+def _stop_app() -> None:
+    global _app_proc
+    if _app_proc:
+        _app_proc.terminate()
+        _app_proc = None
+
+
 def build_server(parts=PARTS) -> FastMCP:
     server = FastMCP("test-mcp", instructions=INSTRUCTIONS, middleware=[Trace()])
 
@@ -192,4 +229,5 @@ mcp = build_server()
 
 
 if __name__ == "__main__":
+    _ensure_app()
     mcp.run(show_banner=False)
