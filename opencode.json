@@ -1,0 +1,9 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "ticket-spec": { "type": "local", "command": ["python", "-m", "servers.ticket_spec.server"], "enabled": true },
+    "api-test": { "type": "local", "command": ["python", "-m", "servers.api_test.server"], "enabled": true },
+    "reporting": { "type": "local", "command": ["python", "-m", "servers.reporting.server"], "enabled": true },
+    "playwright": { "type": "local", "command": ["npx", "-y", "@playwright/mcp@0.0.83", "--isolated", "--viewport-size", "900,600"], "enabled": true }
+  }
+}

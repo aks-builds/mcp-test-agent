@@ -51,9 +51,18 @@ older automation, but the app now uses `save-task-btn`. Its label is still
 decisions are written in code, so it runs the same way every time. Use it
 for rehearsals and as the fallback when a live run stalls.
 
-For the live agent, open Claude Code in this folder. `.mcp.json` registers
-the four servers (approve them the first time). Start the app and the
-dashboard yourself:
+For the live agent, open any of these four tools in this folder. Each
+one reads its own config file, and all four files register the same four
+servers (a unit test keeps them in sync):
+
+| Tool | Config file | Context file | Open it with |
+|---|---|---|---|
+| Claude Code | `.mcp.json` | `AGENT_RUNBOOK.md` | `claude` |
+| Gemini CLI | `.gemini/settings.json` | `GEMINI.md` | `gemini` |
+| Codex CLI | `.codex/config.toml` | `AGENTS.md` | `codex` |
+| OpenCode | `opencode.json` | `AGENTS.md` | `opencode` |
+
+Start the app and the dashboard yourself first:
 
 ```bash
 uvicorn demo_app.main:app --port 8000
@@ -63,6 +72,23 @@ uvicorn servers.reporting.dashboard:app --port 8766
 Then give one instruction: `Test ticket NASH-101 and report the results.
 Follow AGENT_RUNBOOK.md.`
 
+First-run notes per tool:
+
+- Claude Code asks you to approve the four project servers once.
+- Gemini CLI and Codex CLI only load project MCP config from a trusted
+  folder. Both ask you to trust the folder the first time you open it
+  here. To check, run `gemini mcp list` or `codex mcp list` in this
+  folder: all four servers should show as connected (Gemini) or enabled
+  (Codex).
+- OpenCode needs no trust step. `opencode mcp list` should show all four
+  as connected. Pick a capable model with `/models` before the demo; the
+  free default is not enough for the self-heal step.
+- Every tool asks before each MCP tool call unless you let it run on its
+  own. In Claude Code pick "always allow" on the first prompt for each
+  tool. Gemini has `gemini -y`, Codex has `codex --full-auto`. For the
+  live demo, decide beforehand whether you want to approve each call by
+  hand or let it run.
+
 If a port is already in use (a leftover uvicorn from a rehearsal), stop
 that process first.
 
@@ -71,7 +97,11 @@ that process first.
 ```
 run_demo.py               one-command demo (MCP client for all four servers)
 .mcp.json                 the same four servers, for Claude Code
-AGENT_RUNBOOK.md          instructions for an LLM agent
+.gemini/settings.json     the same four servers, for Gemini CLI
+.codex/config.toml        the same four servers, for Codex CLI
+opencode.json             the same four servers, for OpenCode
+AGENT_RUNBOOK.md          step-by-step instructions for the agent
+AGENTS.md, GEMINI.md      short context files that point at the runbook
 data/tickets.json         the mock Jira ticket NASH-101
 demo_app/                 Task Tracker app under test (FastAPI + one HTML page)
 servers/ticket_spec/      MCP: get_ticket, get_openapi_spec
