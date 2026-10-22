@@ -107,10 +107,21 @@ def port_free(port: int) -> bool:
         return s.connect_ex(("127.0.0.1", port)) != 0
 
 
-def start_web(module: str, port: int) -> subprocess.Popen:
+def _is_our_app(port: int) -> bool:
+    """True if the port is serving our task tracker or dashboard."""
+    try:
+        r = httpx.get(f"http://127.0.0.1:{port}/", timeout=1.0)
+        return r.status_code == 200
+    except httpx.HTTPError:
+        return False
+
+
+def start_web(module: str, port: int) -> subprocess.Popen | None:
     if not port_free(port):
-        sys.exit(f"Port {port} is already in use. Stop the old process (a leftover "
-                 f"uvicorn from an earlier run?) and run again.")
+        if _is_our_app(port):
+            print(f"  Port {port} already has our app running, reusing it")
+            return None
+        sys.exit(f"Port {port} is in use by something else. Stop it and run again.")
     proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", module, "--port", str(port), "--log-level", "warning"],
         cwd=ROOT,
@@ -133,8 +144,10 @@ def reset_mock_feeds() -> None:
 
 def start_services(open_dashboard: bool) -> list[subprocess.Popen]:
     reset_mock_feeds()
-    procs = [start_web("task_tracker.main:app", APP_PORT),
-             start_web("servers.reporting.dashboard:app", DASHBOARD_PORT)]
+    procs = [p for p in (
+        start_web("task_tracker.main:app", APP_PORT),
+        start_web("servers.reporting.dashboard:app", DASHBOARD_PORT),
+    ) if p is not None]
     print(f"  Task Tracker app   {APP_URL}")
     print(f"  Jira/Slack mock    {DASHBOARD_URL}  (cleared)")
     print(f"  MCP trace          {TRACE_FILE.relative_to(ROOT)}  (cleared)")

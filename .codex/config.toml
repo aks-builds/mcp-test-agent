@@ -1,9 +1,14 @@
 # Codex CLI: the one MCP server this project needs. Loaded only when the
 # project is trusted (see README).
 #
+# sandbox = read-only: the agent can't write files or run destructive
+# commands, pushing it toward the MCP tools instead of shell.
+#
 # Plugins (Postman, etc.) are disabled so the agent only sees test-mcp.
 # Without this, codex_apps loads 26+ extra tools and the Postman hook
 # fires on session start, pulling the agent away from test-mcp.
+
+sandbox = "read-only"
 
 [plugins."postman@postman"]
 enabled = false

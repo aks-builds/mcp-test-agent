@@ -57,6 +57,13 @@ def test_codex_disables_external_plugins():
     assert postman.get("enabled") is False, "postman plugin must be disabled"
 
 
+def test_codex_sandbox_is_read_only():
+    """Without the sandbox, Codex reads the codebase and runs shell
+    commands instead of using the MCP tools."""
+    data = tomllib.loads((ROOT / ".codex" / "config.toml").read_text(encoding="utf-8"))
+    assert data.get("sandbox") == "read-only"
+
+
 def test_no_instruction_files_in_the_repo():
     """The procedure lives in the server (instructions + prompt), not in
     AGENTS.md style files. MCP alone does the job."""
