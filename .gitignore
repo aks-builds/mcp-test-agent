@@ -1,9 +1,8 @@
-.worktrees/
 data/jira_comments.json
 data/slack_messages.json
 data/mcp_trace.jsonl
 __pycache__/
 *.pyc
 .pytest_cache/
-.superpowers/
 .playwright-mcp/
+.vscode/
