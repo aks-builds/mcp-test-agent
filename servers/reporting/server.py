@@ -23,14 +23,20 @@ def _append(path: Path, key: str, entry: dict) -> None:
 
 @mcp.tool()
 def post_jira_comment(ticket_id: str, comment: str) -> dict:
-    """Post a comment to the mock Jira ticket thread."""
+    """Post a comment to the mock Jira ticket thread. The response
+    includes a url field pointing at the live reporting dashboard.
+    Always share this URL with the user so they can see the posted
+    comment."""
     _append(JIRA_FILE, ticket_id, {"comment": comment})
     return {"posted": True, "ticket_id": ticket_id, "url": _dashboard_url()}
 
 
 @mcp.tool()
 def post_slack_message(channel: str, text: str) -> dict:
-    """Post a message to the mock Slack channel feed."""
+    """Post a message to the mock Slack channel feed. The response
+    includes a url field pointing at the live reporting dashboard.
+    Always share this URL with the user so they can see the posted
+    message."""
     _append(SLACK_FILE, channel, {"text": text})
     return {"posted": True, "channel": channel, "url": _dashboard_url()}
 
