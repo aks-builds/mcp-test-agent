@@ -231,15 +231,25 @@ def _find_free_port(start: int = 8000, count: int = 10) -> int:
 
 
 def _start_uvicorn(module: str, port: int) -> subprocess.Popen:
+    kwargs: dict = dict(
+        cwd=str(ROOT),
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if os.name == "nt":
+        kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
     proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", module,
          "--port", str(port), "--log-level", "warning"],
-        cwd=str(ROOT),
+        **kwargs,
     )
     deadline = time.time() + 10
     while time.time() < deadline:
         if not _port_free(port):
             return proc
+        if proc.poll() is not None:
+            break
         time.sleep(0.2)
     return proc
 
