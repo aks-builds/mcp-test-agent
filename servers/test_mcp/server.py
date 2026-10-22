@@ -169,7 +169,7 @@ def _markdown_summary(text: str) -> str:
     return " ".join(text.split())
 
 
-_app_proc: subprocess.Popen | None = None
+_procs: list[subprocess.Popen] = []
 
 
 def _port_free(port: int) -> bool:
@@ -196,51 +196,64 @@ def _find_free_port(start: int = 8000, count: int = 10) -> int:
     raise RuntimeError(f"no free port in {start}-{start + count - 1}")
 
 
-def _ensure_app() -> None:
-    """Start the task tracker app if it isn't already running.
-
-    If the preferred port (APP_PORT env, default 8000) is taken by our
-    app from an earlier run, reuse it. If something else holds the port,
-    find the next free one. Either way, APP_URL is set so every tool
-    that reads os.environ["APP_URL"] at call time points at the right
-    address."""
-    global _app_proc
-    preferred = int(os.environ.get("APP_PORT", "8000"))
-
-    if not _port_free(preferred):
-        if _is_our_app(preferred):
-            os.environ["APP_URL"] = f"http://127.0.0.1:{preferred}"
-            return
-        port = _find_free_port(preferred + 1)
-    else:
-        port = preferred
-
-    os.environ["APP_URL"] = f"http://127.0.0.1:{port}"
-    _app_proc = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "task_tracker.main:app",
+def _start_uvicorn(module: str, port: int) -> subprocess.Popen:
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "uvicorn", module,
          "--port", str(port), "--log-level", "warning"],
         cwd=str(ROOT),
     )
     deadline = time.time() + 10
     while time.time() < deadline:
         if not _port_free(port):
-            return
+            return proc
         time.sleep(0.2)
+    return proc
+
+
+def _ensure_services() -> None:
+    """Start the task tracker app and reporting dashboard if needed.
+
+    If the preferred port is taken by our app from an earlier run, reuse
+    it. If something else holds the port, find the next free one. Sets
+    APP_URL and DASHBOARD_URL so tools resolve them at call time."""
+    preferred_app = int(os.environ.get("APP_PORT", "8000"))
+    preferred_dash = int(os.environ.get("DASHBOARD_PORT", "8766"))
+
+    if not _port_free(preferred_app):
+        if _is_our_app(preferred_app):
+            os.environ["APP_URL"] = f"http://127.0.0.1:{preferred_app}"
+        else:
+            port = _find_free_port(preferred_app + 1)
+            os.environ["APP_URL"] = f"http://127.0.0.1:{port}"
+            _procs.append(_start_uvicorn("task_tracker.main:app", port))
+    else:
+        os.environ["APP_URL"] = f"http://127.0.0.1:{preferred_app}"
+        _procs.append(_start_uvicorn("task_tracker.main:app", preferred_app))
+
+    if _port_free(preferred_dash):
+        dash_port = preferred_dash
+    else:
+        dash_port = _find_free_port(preferred_dash + 1)
+    if _port_free(dash_port):
+        os.environ["DASHBOARD_URL"] = f"http://127.0.0.1:{dash_port}"
+        _procs.append(_start_uvicorn(
+            "servers.reporting.dashboard:app", dash_port))
+    else:
+        os.environ["DASHBOARD_URL"] = f"http://127.0.0.1:{preferred_dash}"
 
 
 @atexit.register
-def _stop_app() -> None:
-    """Terminate the app subprocess and wait for the port to be freed."""
-    global _app_proc
-    if not _app_proc:
-        return
-    _app_proc.terminate()
-    try:
-        _app_proc.wait(timeout=5)
-    except subprocess.TimeoutExpired:
-        _app_proc.kill()
-        _app_proc.wait(timeout=3)
-    _app_proc = None
+def _stop_services() -> None:
+    """Terminate all subprocesses and wait for ports to be freed."""
+    for proc in _procs:
+        proc.terminate()
+    for proc in _procs:
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait(timeout=3)
+    _procs.clear()
 
 
 def build_server(parts=PARTS) -> FastMCP:
@@ -269,5 +282,5 @@ mcp = build_server()
 
 
 if __name__ == "__main__":
-    _ensure_app()
+    _ensure_services()
     mcp.run(show_banner=False)

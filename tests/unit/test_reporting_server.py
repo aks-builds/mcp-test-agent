@@ -17,7 +17,9 @@ def use_tmp_data_files(tmp_path, monkeypatch):
 def test_post_jira_comment_appends_to_store(use_tmp_data_files):
     jira_file, _ = use_tmp_data_files
     result = reporting_server.post_jira_comment("NASH-101", "All tests passed.")
-    assert result == {"posted": True, "ticket_id": "NASH-101"}
+    assert result["posted"] is True
+    assert result["ticket_id"] == "NASH-101"
+    assert "url" in result
     store = json.loads(jira_file.read_text(encoding="utf-8"))
     assert store["NASH-101"][0]["comment"] == "All tests passed."
 
@@ -25,7 +27,9 @@ def test_post_jira_comment_appends_to_store(use_tmp_data_files):
 def test_post_slack_message_appends_to_store(use_tmp_data_files):
     _, slack_file = use_tmp_data_files
     result = reporting_server.post_slack_message("#qa-alerts", "Build green.")
-    assert result == {"posted": True, "channel": "#qa-alerts"}
+    assert result["posted"] is True
+    assert result["channel"] == "#qa-alerts"
+    assert "url" in result
     store = json.loads(slack_file.read_text(encoding="utf-8"))
     assert store["#qa-alerts"][0]["text"] == "Build green."
 

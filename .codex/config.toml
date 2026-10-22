@@ -23,3 +23,18 @@ approval_mode = "approve"
 
 [mcp_servers.test-mcp.tools.report_post_slack_message]
 approval_mode = "approve"
+
+[mcp_servers.test-mcp.tools.api_run_api_test]
+approval_mode = "approve"
+
+[mcp_servers.test-mcp.tools.browser_navigate]
+approval_mode = "approve"
+
+[mcp_servers.test-mcp.tools.browser_evaluate]
+approval_mode = "approve"
+
+[mcp_servers.test-mcp.tools.browser_type]
+approval_mode = "approve"
+
+[mcp_servers.test-mcp.tools.browser_click]
+approval_mode = "approve"

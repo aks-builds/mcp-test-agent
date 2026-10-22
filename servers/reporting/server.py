@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 from fastmcp import FastMCP
@@ -8,6 +9,10 @@ JIRA_FILE = DATA_DIR / "jira_comments.json"
 SLACK_FILE = DATA_DIR / "slack_messages.json"
 
 mcp = FastMCP("reporting")
+
+
+def _dashboard_url() -> str:
+    return os.environ.get("DASHBOARD_URL", "http://127.0.0.1:8766")
 
 
 def _append(path: Path, key: str, entry: dict) -> None:
@@ -20,14 +25,14 @@ def _append(path: Path, key: str, entry: dict) -> None:
 def post_jira_comment(ticket_id: str, comment: str) -> dict:
     """Post a comment to the mock Jira ticket thread."""
     _append(JIRA_FILE, ticket_id, {"comment": comment})
-    return {"posted": True, "ticket_id": ticket_id}
+    return {"posted": True, "ticket_id": ticket_id, "url": _dashboard_url()}
 
 
 @mcp.tool()
 def post_slack_message(channel: str, text: str) -> dict:
     """Post a message to the mock Slack channel feed."""
     _append(SLACK_FILE, channel, {"text": text})
-    return {"posted": True, "channel": channel}
+    return {"posted": True, "channel": channel, "url": _dashboard_url()}
 
 
 if __name__ == "__main__":
