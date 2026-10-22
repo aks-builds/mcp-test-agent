@@ -37,9 +37,9 @@ async def test_server_carries_the_procedure(server):
     assert "browser_snapshot" in text
     assert "report_post_slack_message" in text
     assert "never claim a pass" in text
-    assert "browser_snapshot" in umbrella.INSTRUCTIONS
-    assert "do not run shell commands" in umbrella.INSTRUCTIONS
-    assert "starts automatically" in umbrella.INSTRUCTIONS
+    assert "browser_snapshot" in umbrella.INSTRUCTIONS_TEMPLATE
+    assert "do not run shell commands" in umbrella.INSTRUCTIONS_TEMPLATE
+    assert "{app_url}" in umbrella.INSTRUCTIONS_TEMPLATE
 
 
 async def test_every_call_is_traced(server, tmp_path):

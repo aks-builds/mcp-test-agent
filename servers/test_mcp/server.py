@@ -39,17 +39,19 @@ PARTS = [
     ("servers.browser.server", None),  # Playwright already names its tools browser_*
 ]
 
-INSTRUCTIONS = """You are a test agent. This server gives you everything you need to test
+INSTRUCTIONS_TEMPLATE = """You are a test agent. This server gives you everything you need to test
 one Jira ticket end to end: read the ticket and the live API spec
 (ticket_*), drive a real browser (browser_*), run API checks (api_*) and
 report back to Jira and Slack (report_*).
 
+The app under test is running at {app_url}. Use that URL for every
+browser_navigate call. Do not guess other URLs.
+
 Use only the tools of this server. Everything you need is in this text
 and in those tools. Do not search the disk for a procedure or a prompt,
 do not read the repository, do not run shell commands, and do not delete
-or edit any file. The app under test starts automatically; if a tool
-says it is unreachable, report that and stop. When the report is
-posted, you are done.
+or edit any file. If a tool says the app is unreachable, report that
+and stop. When the report is posted, you are done.
 
 Rules:
 - Never say a check passed unless you called the tool and saw it pass.
@@ -265,7 +267,9 @@ def _stop_services() -> None:
 
 
 def build_server(parts=PARTS) -> FastMCP:
-    server = FastMCP("test-mcp", instructions=INSTRUCTIONS, middleware=[Trace()])
+    app_url = os.environ.get("APP_URL", "http://127.0.0.1:8000")
+    instructions = INSTRUCTIONS_TEMPLATE.format(app_url=app_url)
+    server = FastMCP("test-mcp", instructions=instructions, middleware=[Trace()])
 
     @server.prompt
     def test_ticket(ticket_id: str = "NASH-101") -> str:
@@ -291,4 +295,5 @@ mcp = build_server()
 
 if __name__ == "__main__":
     _ensure_services()
+    mcp = build_server()
     mcp.run(show_banner=False)
