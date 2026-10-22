@@ -1,6 +1,25 @@
 # Codex CLI: the one MCP server this project needs. Loaded only when the
 # project is trusted (see README).
+#
+# Plugins (Postman, etc.) are disabled so the agent only sees test-mcp.
+# Without this, codex_apps loads 26+ extra tools and the Postman hook
+# fires on session start, pulling the agent away from test-mcp.
+
+[plugins."postman@postman"]
+enabled = false
 
 [mcp_servers.test-mcp]
 command = "python"
 args = ["-m", "servers.test_mcp.server"]
+
+[mcp_servers.test-mcp.tools.ticket_get_ticket]
+approval_mode = "approve"
+
+[mcp_servers.test-mcp.tools.ticket_get_openapi_spec]
+approval_mode = "approve"
+
+[mcp_servers.test-mcp.tools.report_post_jira_comment]
+approval_mode = "approve"
+
+[mcp_servers.test-mcp.tools.report_post_slack_message]
+approval_mode = "approve"

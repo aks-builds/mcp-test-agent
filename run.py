@@ -49,9 +49,17 @@ LAUNCH_PROMPT = (f"Test ticket {TICKET_ID} end to end with the {SERVER_NAME} too
 # shell, no file edits, no plugins. Gemini has no such switch, so it
 # relies on the server instructions alone.
 AGENTS = {
-    "claude": lambda prompt: ["claude", "--disallowedTools", "Bash,Edit,Write,NotebookEdit", prompt],
+    "claude": lambda prompt: [
+        "claude", "--disallowedTools",
+        "Bash,Edit,Write,NotebookEdit,Read,Grep,Glob,WebFetch,WebSearch",
+        prompt,
+    ],
     "gemini": lambda prompt: ["gemini", "-i", prompt],
-    "codex": lambda prompt: ["codex", "--sandbox", "read-only", prompt],
+    "codex": lambda prompt: [
+        "codex", "--sandbox", "read-only",
+        "-c", 'plugins."postman@postman".enabled=false',
+        prompt,
+    ],
     "opencode": lambda prompt: ["opencode", "--pure", "--prompt", prompt],
 }
 

@@ -49,6 +49,14 @@ def test_opencode_can_only_act_through_mcp():
         assert data["permission"][tool] == "deny", tool
 
 
+def test_codex_disables_external_plugins():
+    """Codex has global plugins (Postman, etc.) that hijack the session.
+    The project config must disable them so only test-mcp tools load."""
+    data = tomllib.loads((ROOT / ".codex" / "config.toml").read_text(encoding="utf-8"))
+    postman = data.get("plugins", {}).get("postman@postman", {})
+    assert postman.get("enabled") is False, "postman plugin must be disabled"
+
+
 def test_no_instruction_files_in_the_repo():
     """The procedure lives in the server (instructions + prompt), not in
     AGENTS.md style files. MCP alone does the job."""
