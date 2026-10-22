@@ -191,6 +191,38 @@ def _is_our_app(port: int) -> bool:
         return False
 
 
+def _kill_port_holder(port: int) -> bool:
+    """Kill the process listening on port (leftover from a crashed run).
+
+    On Windows, atexit handlers don't fire when the agent CLI kills the
+    MCP server process, so uvicorn children become orphans. This cleans
+    them up at the start of the next run. Returns True if the port is
+    free afterwards."""
+    if os.name == "nt":
+        try:
+            out = subprocess.check_output(
+                ["netstat", "-ano", "-p", "TCP"], text=True, timeout=5,
+            )
+            for line in out.splitlines():
+                if f":{port}" in line and "LISTENING" in line:
+                    pid = line.strip().split()[-1]
+                    if pid.isdigit() and int(pid) != os.getpid():
+                        subprocess.run(
+                            ["taskkill", "/F", "/PID", pid],
+                            capture_output=True, timeout=5,
+                        )
+        except Exception:
+            pass
+    else:
+        try:
+            subprocess.run(["fuser", "-k", f"{port}/tcp"],
+                           capture_output=True, timeout=5)
+        except Exception:
+            pass
+    time.sleep(0.5)
+    return _port_free(port)
+
+
 def _find_free_port(start: int = 8000, count: int = 10) -> int:
     for port in range(start, start + count):
         if _port_free(port):
@@ -220,36 +252,37 @@ def _reset_data() -> None:
 
 
 def _ensure_services() -> None:
-    """Start the task tracker app and reporting dashboard if needed.
+    """Start the task tracker app and reporting dashboard.
 
-    If the preferred port is taken by our app from an earlier run, reuse
-    it. If something else holds the port, find the next free one. Sets
-    APP_URL and DASHBOARD_URL so tools resolve them at call time."""
+    Kills leftover processes from a previous crashed run first, then
+    starts fresh. If the preferred port is still occupied by something
+    else, falls back to the next free port. Sets APP_URL and
+    DASHBOARD_URL so tools resolve them at call time."""
     _reset_data()
     preferred_app = int(os.environ.get("APP_PORT", "8000"))
     preferred_dash = int(os.environ.get("DASHBOARD_PORT", "8766"))
 
-    if not _port_free(preferred_app):
-        if _is_our_app(preferred_app):
-            os.environ["APP_URL"] = f"http://127.0.0.1:{preferred_app}"
-        else:
-            port = _find_free_port(preferred_app + 1)
-            os.environ["APP_URL"] = f"http://127.0.0.1:{port}"
-            _procs.append(_start_uvicorn("task_tracker.main:app", port))
+    # Kill leftover app from a previous crashed run
+    if not _port_free(preferred_app) and _is_our_app(preferred_app):
+        _kill_port_holder(preferred_app)
+
+    if _port_free(preferred_app):
+        app_port = preferred_app
     else:
-        os.environ["APP_URL"] = f"http://127.0.0.1:{preferred_app}"
-        _procs.append(_start_uvicorn("task_tracker.main:app", preferred_app))
+        app_port = _find_free_port(preferred_app + 1)
+    os.environ["APP_URL"] = f"http://127.0.0.1:{app_port}"
+    _procs.append(_start_uvicorn("task_tracker.main:app", app_port))
+
+    # Kill leftover dashboard from a previous crashed run
+    if not _port_free(preferred_dash):
+        _kill_port_holder(preferred_dash)
 
     if _port_free(preferred_dash):
         dash_port = preferred_dash
     else:
         dash_port = _find_free_port(preferred_dash + 1)
-    if _port_free(dash_port):
-        os.environ["DASHBOARD_URL"] = f"http://127.0.0.1:{dash_port}"
-        _procs.append(_start_uvicorn(
-            "servers.reporting.dashboard:app", dash_port))
-    else:
-        os.environ["DASHBOARD_URL"] = f"http://127.0.0.1:{preferred_dash}"
+    os.environ["DASHBOARD_URL"] = f"http://127.0.0.1:{dash_port}"
+    _procs.append(_start_uvicorn("servers.reporting.dashboard:app", dash_port))
 
 
 @atexit.register
