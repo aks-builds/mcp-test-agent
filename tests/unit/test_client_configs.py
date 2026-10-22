@@ -41,6 +41,14 @@ def test_all_clients_point_at_test_mcp_only():
         assert servers == EXPECTED, f"{name}: {servers}"
 
 
+def test_opencode_can_only_act_through_mcp():
+    """A live run once wandered off into shell commands, read the whole
+    repo and killed the app's server. The agent gets MCP tools only."""
+    data = json.loads((ROOT / "opencode.json").read_text(encoding="utf-8"))
+    for tool in ("bash", "edit", "read", "glob", "grep", "list", "skill", "task"):
+        assert data["permission"][tool] == "deny", tool
+
+
 def test_no_instruction_files_in_the_repo():
     """The procedure lives in the server (instructions + prompt), not in
     AGENTS.md style files. MCP alone does the job."""

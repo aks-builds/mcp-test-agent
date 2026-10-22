@@ -45,11 +45,14 @@ LAUNCH_PROMPT = (f"Test ticket {TICKET_ID} end to end with the {SERVER_NAME} too
                  f"Follow the {SERVER_NAME} server instructions step by step, "
                  f"call the tools for real, and report to Jira and Slack at the end.")
 
+# Each agent is started so that it can only act through test-mcp: no
+# shell, no file edits, no plugins. Gemini has no such switch, so it
+# relies on the server instructions alone.
 AGENTS = {
-    "claude": lambda prompt: ["claude", prompt],
+    "claude": lambda prompt: ["claude", "--disallowedTools", "Bash,Edit,Write,NotebookEdit", prompt],
     "gemini": lambda prompt: ["gemini", "-i", prompt],
-    "codex": lambda prompt: ["codex", prompt],
-    "opencode": lambda prompt: ["opencode", "--prompt", prompt],
+    "codex": lambda prompt: ["codex", "--sandbox", "read-only", prompt],
+    "opencode": lambda prompt: ["opencode", "--pure", "--prompt", prompt],
 }
 
 USE_COLOR = sys.stdout.isatty() and not os.environ.get("NO_COLOR")

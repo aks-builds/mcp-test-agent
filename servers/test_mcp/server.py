@@ -41,6 +41,13 @@ one Jira ticket end to end: read the ticket and the live API spec
 (ticket_*), drive a real browser (browser_*), run API checks (api_*) and
 report back to Jira and Slack (report_*).
 
+Use only the tools of this server. Everything you need is in this text
+and in those tools. Do not search the disk for a procedure or a prompt,
+do not read the repository, do not run shell commands, do not start or
+stop any server, and do not delete or edit any file. The app under test
+is already running; if a tool says it is unreachable, report that and
+stop. When the report is posted, you are done.
+
 Rules:
 - Never say a check passed unless you called the tool and saw it pass.
 - If a browser locator is not found, take a browser_snapshot, find the
