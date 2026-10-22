@@ -210,12 +210,20 @@ def _start_uvicorn(module: str, port: int) -> subprocess.Popen:
     return proc
 
 
+def _reset_data() -> None:
+    """Clear trace and report files so each session starts fresh."""
+    data_dir = ROOT / "data"
+    for name in ("jira_comments.json", "slack_messages.json", "mcp_trace.jsonl"):
+        (data_dir / name).unlink(missing_ok=True)
+
+
 def _ensure_services() -> None:
     """Start the task tracker app and reporting dashboard if needed.
 
     If the preferred port is taken by our app from an earlier run, reuse
     it. If something else holds the port, find the next free one. Sets
     APP_URL and DASHBOARD_URL so tools resolve them at call time."""
+    _reset_data()
     preferred_app = int(os.environ.get("APP_PORT", "8000"))
     preferred_dash = int(os.environ.get("DASHBOARD_PORT", "8766"))
 
