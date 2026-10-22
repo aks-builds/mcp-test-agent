@@ -4,8 +4,6 @@ from typing import Any
 import httpx
 from fastmcp import FastMCP
 
-APP_URL = os.environ.get("APP_URL", "http://127.0.0.1:8000")
-
 mcp = FastMCP("api-test")
 
 
@@ -21,7 +19,8 @@ def run_api_test(
     never raises for a failed assertion or a transport-level error; a
     transport error (e.g. the app is unreachable) comes back as a
     failed result with an added error key."""
-    url = f"{APP_URL}{path}"
+    app_url = os.environ.get("APP_URL", "http://127.0.0.1:8000")
+    url = f"{app_url}{path}"
     try:
         response = httpx.request(method.upper(), url, json=body, timeout=5.0)
     except httpx.HTTPError as exc:

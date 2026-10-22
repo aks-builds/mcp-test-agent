@@ -6,7 +6,6 @@ import httpx
 from fastmcp import FastMCP
 
 DATA_FILE = Path(__file__).resolve().parents[2] / "data" / "tickets.json"
-APP_URL = os.environ.get("APP_URL", "http://127.0.0.1:8000")
 
 mcp = FastMCP("ticket-spec")
 
@@ -31,7 +30,8 @@ def get_openapi_spec() -> dict:
     error dict instead of raising if the app is unreachable or
     returns an error status."""
     try:
-        resp = httpx.get(f"{APP_URL}/openapi.json", timeout=5.0)
+        app_url = os.environ.get("APP_URL", "http://127.0.0.1:8000")
+        resp = httpx.get(f"{app_url}/openapi.json", timeout=5.0)
         resp.raise_for_status()
     except httpx.HTTPError as exc:
         return {"error": f"app unreachable or returned an error: {exc}"}

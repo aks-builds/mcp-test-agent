@@ -170,7 +170,6 @@ def _markdown_summary(text: str) -> str:
 
 
 _app_proc: subprocess.Popen | None = None
-_APP_PORT = int(os.environ.get("APP_PORT", "8000"))
 
 
 def _port_free(port: int) -> bool:
@@ -178,29 +177,70 @@ def _port_free(port: int) -> bool:
         return s.connect_ex(("127.0.0.1", port)) != 0
 
 
+def _is_our_app(port: int) -> bool:
+    """Quick check: does this port serve our task tracker's OpenAPI spec?"""
+    import urllib.request
+    try:
+        with urllib.request.urlopen(
+            f"http://127.0.0.1:{port}/openapi.json", timeout=2
+        ) as r:
+            return r.status == 200
+    except Exception:
+        return False
+
+
+def _find_free_port(start: int = 8000, count: int = 10) -> int:
+    for port in range(start, start + count):
+        if _port_free(port):
+            return port
+    raise RuntimeError(f"no free port in {start}-{start + count - 1}")
+
+
 def _ensure_app() -> None:
-    """Start the task tracker if nothing is listening on the app port."""
+    """Start the task tracker app if it isn't already running.
+
+    If the preferred port (APP_PORT env, default 8000) is taken by our
+    app from an earlier run, reuse it. If something else holds the port,
+    find the next free one. Either way, APP_URL is set so every tool
+    that reads os.environ["APP_URL"] at call time points at the right
+    address."""
     global _app_proc
-    if not _port_free(_APP_PORT):
-        return
+    preferred = int(os.environ.get("APP_PORT", "8000"))
+
+    if not _port_free(preferred):
+        if _is_our_app(preferred):
+            os.environ["APP_URL"] = f"http://127.0.0.1:{preferred}"
+            return
+        port = _find_free_port(preferred + 1)
+    else:
+        port = preferred
+
+    os.environ["APP_URL"] = f"http://127.0.0.1:{port}"
     _app_proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "task_tracker.main:app",
-         "--port", str(_APP_PORT), "--log-level", "warning"],
+         "--port", str(port), "--log-level", "warning"],
         cwd=str(ROOT),
     )
     deadline = time.time() + 10
     while time.time() < deadline:
-        if not _port_free(_APP_PORT):
+        if not _port_free(port):
             return
         time.sleep(0.2)
 
 
 @atexit.register
 def _stop_app() -> None:
+    """Terminate the app subprocess and wait for the port to be freed."""
     global _app_proc
-    if _app_proc:
-        _app_proc.terminate()
-        _app_proc = None
+    if not _app_proc:
+        return
+    _app_proc.terminate()
+    try:
+        _app_proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        _app_proc.kill()
+        _app_proc.wait(timeout=3)
+    _app_proc = None
 
 
 def build_server(parts=PARTS) -> FastMCP:
