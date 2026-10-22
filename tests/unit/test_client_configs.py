@@ -1,4 +1,4 @@
-"""The four MCP client configs must describe the same four servers.
+"""Every agent client must point at the same single server, test-mcp.
 
 Claude Code reads .mcp.json, Gemini CLI reads .gemini/settings.json,
 Codex CLI reads .codex/config.toml and OpenCode reads opencode.json.
@@ -9,7 +9,7 @@ import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-EXPECTED = {"ticket-spec", "api-test", "reporting", "playwright"}
+EXPECTED = {"test-mcp": ["python", "-m", "servers.test_mcp.server"]}
 
 
 def _claude():
@@ -35,25 +35,14 @@ def _opencode():
     return {k: v["command"] for k, v in data["mcp"].items()}
 
 
-def test_all_clients_list_the_same_four_servers():
-    configs = {
-        "claude": _claude(),
-        "gemini": _gemini(),
-        "codex": _codex(),
-        "opencode": _opencode(),
-    }
-    for name, servers in configs.items():
-        assert set(servers) == EXPECTED, f"{name} has {sorted(servers)}"
+def test_all_clients_point_at_test_mcp_only():
+    for name, servers in {"claude": _claude(), "gemini": _gemini(),
+                          "codex": _codex(), "opencode": _opencode()}.items():
+        assert servers == EXPECTED, f"{name}: {servers}"
 
 
-def test_all_clients_launch_each_server_the_same_way():
-    reference = _claude()
-    for name, servers in {"gemini": _gemini(), "codex": _codex(), "opencode": _opencode()}.items():
-        for server, command in reference.items():
-            assert servers[server] == command, f"{name}/{server}: {servers[server]} != {command}"
-
-
-def test_agent_context_files_point_at_the_runbook():
-    assert "AGENT_RUNBOOK.md" in (ROOT / "AGENTS.md").read_text(encoding="utf-8")
-    assert "AGENTS.md" in (ROOT / "GEMINI.md").read_text(encoding="utf-8")
-    assert (ROOT / "AGENT_RUNBOOK.md").exists()
+def test_no_instruction_files_in_the_repo():
+    """The procedure lives in the server (instructions + prompt), not in
+    AGENTS.md style files. Viewers should see MCP alone doing the job."""
+    for name in ("AGENTS.md", "GEMINI.md", "CLAUDE.md", "AGENT_RUNBOOK.md"):
+        assert not (ROOT / name).exists(), f"{name} should not exist"

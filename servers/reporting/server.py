@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 JIRA_FILE = DATA_DIR / "jira_comments.json"

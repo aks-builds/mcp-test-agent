@@ -1,18 +1,6 @@
-# Codex CLI: the same four MCP servers as .mcp.json (Claude Code).
-# Codex reads this file when the project is trusted (see README).
+# Codex CLI: the one MCP server this demo needs. Loaded only when the
+# project is trusted (see README).
 
-[mcp_servers.ticket-spec]
+[mcp_servers.test-mcp]
 command = "python"
-args = ["-m", "servers.ticket_spec.server"]
-
-[mcp_servers.api-test]
-command = "python"
-args = ["-m", "servers.api_test.server"]
-
-[mcp_servers.reporting]
-command = "python"
-args = ["-m", "servers.reporting.server"]
-
-[mcp_servers.playwright]
-command = "npx"
-args = ["-y", "@playwright/mcp@0.0.83", "--isolated", "--viewport-size", "900,600"]
+args = ["-m", "servers.test_mcp.server"]

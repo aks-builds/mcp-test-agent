@@ -2,7 +2,7 @@ import os
 from typing import Any
 
 import httpx
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 DEMO_APP_URL = os.environ.get("DEMO_APP_URL", "http://127.0.0.1:8000")
 

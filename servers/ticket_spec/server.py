@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 import httpx
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 DATA_FILE = Path(__file__).resolve().parents[2] / "data" / "tickets.json"
 DEMO_APP_URL = os.environ.get("DEMO_APP_URL", "http://127.0.0.1:8000")

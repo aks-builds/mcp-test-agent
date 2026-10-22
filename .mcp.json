@@ -1,8 +1,5 @@
 {
   "mcpServers": {
-    "ticket-spec": { "command": "python", "args": ["-m", "servers.ticket_spec.server"] },
-    "api-test": { "command": "python", "args": ["-m", "servers.api_test.server"] },
-    "reporting": { "command": "python", "args": ["-m", "servers.reporting.server"] },
-    "playwright": { "command": "npx", "args": ["-y", "@playwright/mcp@0.0.83", "--isolated", "--viewport-size", "900,600"] }
+    "test-mcp": { "command": "python", "args": ["-m", "servers.test_mcp.server"] }
   }
 }

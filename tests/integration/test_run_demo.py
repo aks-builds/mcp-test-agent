@@ -15,3 +15,5 @@ def test_run_demo_passes_end_to_end():
     assert '[FAIL] Click on #add-task-btn failed' in result.stdout
     assert "[HEAL]" in result.stdout
     assert "NASH-101 PASSED: 5/5 checks, 1 self-heal" in result.stdout
+    assert "MCP trace:" in result.stdout
+    assert "agent -> test-mcp/browser" in result.stdout
